@@ -2,7 +2,9 @@
 from tkinter import ttk,StringVar
 from tkinter import filedialog
 from tkinterdnd2 import TkinterDnD
+from tkinter import Toplevel
 from datetime import date
+import os
 
 import openpyxl as xl
 import os
@@ -25,6 +27,7 @@ def browseFiles():
     
     year = getYear()
     qtr = getQuarter()
+    print("Date set as Q" + qtr + ", " + year)
 
     files = os.listdir(source_dir)
     print(files)
@@ -38,19 +41,35 @@ def browseFiles():
         file = source_dir + "/" + file
         print("Currently working on: " + file)
 
-        transform.transformFile(file,qtr,year) #!
+        if file.endswith(('.xlsx','.csv','xlsm','xls')) and not os.path.isdir(file):
+            if transform.transformFile(file,qtr,year) != "": #should only print non-empty string if name needs to be adjusted
+                print("venture name error:")
+                name_error()
+        else:
+            print("This is either a folder or not an Excel file. Skipping to next file...")
+        cnt_files += 1 
 
-        cnt_files += 1
-    print("renamed and moved all files. Exporting master fee dataframe...")
+    print("Renamed and moved all files. Exporting master fee dataframe...")
 
     if cnt_files == num_files:
         print("Last fee added. Exporting completed fee table:")
         fee.export_fee_db()
     else:
-        print("Not all files parsed? Check output and try again.")
+        print("Error: Not all files have been parsed. Check output and try again.")
 
     exit()
     
+
+def name_error():#!!!
+    '''
+    error ui when it cannot determine name of venture from fee tab
+    '''
+    errorWindow = Toplevel(root)
+    errorWindow.title("Unknown Venture Name")
+    errorWindow.geometry("300x300")
+
+    return
+
 
 def getQuarter()->str:
     '''
@@ -64,7 +83,6 @@ def getQuarter()->str:
     except:
         print("Pleae input a valid number for Quarter")
 
-    print("Quarter set as Q" + qtr)
     return qtr
     
     
@@ -74,7 +92,7 @@ def getYear()->str:
     '''
     today = date.today()
     # year = today.strftime("%Y")
-    year = str(2023)
+    year = str(2024)
     return year
     
 

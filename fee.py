@@ -24,8 +24,8 @@ def recordfee(venture:str | None, file:str, ws:str, qtr:str, year:str):
     write the dataframe onto Excel sheet, save in Partner Fees folder
     '''
     df = pd.read_excel(file,sheet_name=ws)
-
-    #this loop is for the corner case where partner adds random rows before the bee rows
+    # df = pd.read_excel("C:/Users/harry.ahn/OneDrive - Quadreal Property Group/Portfolio Management/Partner Fees/Capital Deployment Forecast & Actual Fees/2024 Q1/QRI Fee Capital Deployment Forecast Template-04.17.24.xlsx",sheet_name = "Manager Input Fee Payment")
+    #this loop is for the corner case where partner adds random rows before the fee rows
     y = 5
     z = 9
     while y < 15:
@@ -45,13 +45,12 @@ def recordfee(venture:str | None, file:str, ws:str, qtr:str, year:str):
     x = 10
     # rows = [10,11,15,16]
     rows = []
-    while len(rows) < 4:
+    while len(rows) < 2:
         #start at 10
         try:
             if len(rows) == 0:
-                if (df.iloc[x][0] == "PAID ASSET MANAGEMENT FEES FOR THE QUARTER") or \
-                    (df.iloc[x][0] == "PAID AM FEE FOR THE QUARTER") or \
-                    (df.iloc[x][0] == "DATE CM FEE PAID FOR THE QUARTER"):
+                if (df.iloc[x][0] == "EARNED AM FEE FOR THE QUARTER") or \
+                    (df.iloc[x][0] == "REALIZED PROMOTE DURING THE QUARTER"):
                     rows.append(x)
             elif not pd.isna(df.iloc[x][0]):
                 rows.append(x)
@@ -62,7 +61,8 @@ def recordfee(venture:str | None, file:str, ws:str, qtr:str, year:str):
         if x > 20:
             break
     df1 = df.iloc[rows, :5]
-    df1.columns = ['Type', df1.columns[1], df1.columns[2], df1.columns[3], df1.columns[4]]
+    df1.head()
+    df1.columns = ['Type', df1.columns[1], df1.columns[2], df1.columns[3]]
     df1.set_index(df1.columns[0])
 
     df2 = df1.transpose()
@@ -71,8 +71,8 @@ def recordfee(venture:str | None, file:str, ws:str, qtr:str, year:str):
     df2.columns = df2.iloc[0]
     df2 = df2.tail(-1)
 
-    # qtr = "2"
-    # year = "2023"
+    # qtr = "1"
+    # year = "2024"
     str_match = "Q" + qtr + " " + year
     prev_qtr_match = getprevqtr(qtr, year)
     next_qtr_match = getnextqtr(qtr, year)
@@ -81,10 +81,12 @@ def recordfee(venture:str | None, file:str, ws:str, qtr:str, year:str):
     try:
         df_curr = df2[df2.index.str.match(str_match)]
         df_curr.head()
-        # venture = "Fairfield K-Series"
+        # venture = "Charter Hall"
         df_curr = df_curr.rename(index={str_match : venture})
         df_curr_f = fillemptyfee(df_curr)
+        df_curr_f.head()
         df_curr_f_abs = df_curr_f.abs()
+        print(df_curr_f_abs.iloc[0][0])
         add_to_fee_db(df_curr_f_abs,0)
     except:
         print("Current quarter data not found. Skipping fee collection...")
@@ -117,7 +119,7 @@ def fillemptyfee(df:pd.DataFrame)->pd.DataFrame:
     This loop is for the corner case where partner deleted unused fee rows (ex. accrued promote)
     Fill those rows with value 0, 
     '''
-    columns = ['PAID AM','ACCRUED AM','PAID PROMOTE','ACCRUED PROMOTE']
+    columns = ['EARNED AM','REALIZED PROMOTE']
     if len(df.columns) < len(columns):
         n = len(columns) - len(df.columns)
         while n < len(columns):
@@ -174,8 +176,3 @@ def export_fee_db():
         vars.db.to_excel(writer, sheet_name="Current Qtr")
         vars.pq_db.to_excel(writer,sheet_name="Prev Qtr")
         vars.nq_db.to_excel(writer,sheet_name="Next Qtr")
-
-
-        
-    
-    
