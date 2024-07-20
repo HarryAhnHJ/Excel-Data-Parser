@@ -11,53 +11,51 @@ import sys, os
 
 #print(traceback.format_exc())
 
-def transformFile(file: str,qtr: str,year: str)->bool:
+def transformFile(file: str,qtr: str,year: str)->list[str]:
     '''
     Fucntion for individual excel files in the folder. 
     Get new file path & file name
     Replace new path & name with existing path & name
     '''
+    file_info = getnewfilename(file,qtr,year)
 
-    newfilename = getnewfilename(file,qtr,year)
+    if file_info == []:
+        print("An error with the file has been detected. Ignoring file.")
+        return []
 
-    if newfilename != "":
-        newfilepath = getnewfilepath(file,qtr,year)
-        #changing file path, only if new name is viable
-        newfile = os.path.join(newfilepath,newfilename).replace("\\","/")
-        shutil.move(file, newfile)
-        return True
+    prefix = file_info[0] #venture name, partner venture name if not in vars list
+    suffix = file_info[1] #type of report
+    status = file_info[2] #Not Found, Mult-Venture,Single-Venture
+
+    newfilepath = getnewfilepath(file,qtr,year)
+
+    if status == "Not Found":
+        return [newfilepath,prefix,suffix]
+    
+    if status == "Single-Venture":
+        rename_file(file,newfilepath,prefix,suffix)
+        return []
+
+    elif status == "Multi-Venture":
+        rename_file(file,newfilepath,prefix,suffix+" - Mutli-Venture")
+        return []
+
     else:
-        return False
-
-def getnewfilename(file: str,qtr: str,year: str)->str:
-    '''
-    create new file name with fetched venture name and yr-qtr
-    '''
-    venture_info = fetch_venture_name(file,qtr,year)
-
-    if len(venture_info) == 0:
-        print("Error with the fee worksheet.")
-        return ""
-    elif venture_info[0] is None:
-        return ""
-    
-    prefix = venture_info[0]
-    suffix = " - Q" + str(qtr) + venture_info[1]
-    
-    filename = prefix + suffix
-    return filename
-
-
+        print("Status Error. Check getnewfilename function.")
+        return []
+ 
 def getnewfilepath(file: str,qtr: str,year: str)->str:
     '''
     get file path of new destination
     '''
     # target_dir = (
     #     str(pathlib.Path.home()) + "/OneDrive - Quadreal Property Group" + od_path
-    # )
-    target_dir = (
-        str(pathlib.Path.home()) + "/OneDrive - Quadreal Property Group" + vars.test_path
-    ) # test path, comment this out and uncomment above for real application
+    # ) #real path
+    # target_dir = (
+    #     str(pathlib.Path.home()) + "/OneDrive - Quadreal Property Group" + vars.test_path
+    # ) #work test path
+
+    target_dir = vars.home_test_path #home test path
 
     newFolderName = year + " Q" + qtr
     # print("quarter is " + qtr)
@@ -69,11 +67,8 @@ def getnewfilepath(file: str,qtr: str,year: str)->str:
         print("Target directory already exists.")
     return path
 
-#FUNCTION BELOW & FEE FUNCTION NEEDS TO BE UPDATED:
-#1. MULTIPLE DUPLICATES CREATED IN OUTPUT - SHOULD BE ONLY ONE
-#2. AS OF NOW, FUNCTION ONLY WORKS IF CAPITAL DEPLOYMENT SHEET IS FIRST - ORDER SHOULD NOT MATTER
 
-def fetch_venture_name(file: str,qtr: str,year: str)->list[str]:
+def getnewfilename(file: str,qtr: str,year: str)->list[str]:
     '''
     Get venture name and type of report (AM Fee or Deployment forecast or both) 
         - If neither report exists, return empty
@@ -87,15 +82,18 @@ def fetch_venture_name(file: str,qtr: str,year: str)->list[str]:
         print("Probably not an excel file. Ignoring this file...")
         return []
 
-    QR_venture_name = ""
+    
     deployment = False # this means deployment sheet exists, but not necesarily the correct venture name
     am_fee = False # this means AM fee sheet exists, but not necessarily with the correct venture name
-    am_ws = ""
+    QR_venture_name = ""
+    venture_count = 0
 
     '''
     Checks each worksheet to see if capital deployment sheet or AM fee sheet exist
     '''
     for ws in wb:
+        am_ws = ""
+        deployment_sheet = False
         if ws.sheet_state == "visible":
             venture_name = ""
             if str(ws.cell(row=4,column=1).value) == "INVESTMENT NAME:":
@@ -103,56 +101,69 @@ def fetch_venture_name(file: str,qtr: str,year: str)->list[str]:
                 if str(ws.cell(row=4,column=2).value) != "":
                     venture_name = str(ws.cell(row=4,column=2).value).strip()
                 deployment = True
+                deployment_sheet = True
             elif str(ws.cell(row=6,column=1).value) == "INVESTMENT NAME:":
                 if str(ws.cell(row=6,column=2).value) != "":
                     venture_name = str(ws.cell(row=6,column=2).value).strip()
                 am_fee = True
                 am_ws = ws.title
-        if venture_name != "":
-            break
-        
+
+        qr_name_temp = ""
+        if not deployment_sheet and not am_ws == "":
+            print("   Not one of the expected reports. Trying next worksheet..")
+            continue
+        else:
+            qr_name_temp = vars.venture_names.get(venture_name.lower())
+            if qr_name_temp is not None:
+                QR_venture_name = str(qr_name_temp).strip()
+                print(f'{venture_name} has been converted to {QR_venture_name}')
+                venture_count += 1
+                if am_ws != "":
+                    try:
+                        fee.recordfee(QR_venture_name,file,am_ws,qtr,year)
+                    except Exception as e:
+                        print(traceback.format_exc())
+                        print(e)
+            else:
+                QR_venture_name = venture_name
+                print("Venture name not found. Wrong name or cell is empty")
+
+    print("No more worksheets to look through")
+    
     '''
     If no relevant worksheet is found, leave the file alone & flag
     If worksheet is found, get the name of the venture using the cell found above
     '''
-    qr_name_temp = ""
-    if not am_fee and not deployment:
-        print("Expected worksheet not found. Check if they submitted with the correct template.")
-        return []
-    else:
-        qr_name_temp = vars.venture_names.get(venture_name.lower())
-    
-    '''
-    
-    '''
-    if am_fee:
-        if (qr_name_temp != "") & (qr_name_temp is not None):
-            QR_venture_name = str(qr_name_temp).strip()
-            print("QR venture name is " + str(QR_venture_name))
-            try:
-                fee.recordfee(QR_venture_name,file,am_ws,qtr,year)
-            except Exception as e:
-                print(traceback.format_exc())
-                print(e)
-                return []
-        else:
-            print("Venture name not found. Wrong name or cell is empty")
-
-    print("No more worksheets to look through")
-    
-    filename = ""
+    suffix = " - Q" + str(qtr)
     if deployment & am_fee:
-        filename = " QRI Capital Deployment Forecast and AM Fee.xlsx"
+        suffix += " QRI Capital Deployment Forecast and AM Fee.xlsx"
     elif deployment:
-        filename = " QRI Capital Deployment Forecast.xlsx"
+        suffix += " QRI Capital Deployment Forecast.xlsx"
     elif am_fee:
-        filename = " QRI AM Fee.xlsx"
-    elif QR_venture_name is not None:
-        filename = ""
+        suffix += " QRI AM Fee.xlsx"
     else:
-        return []
-    return [QR_venture_name,filename]
+        suffix += ""
+
+    prefix = QR_venture_name
+
+    if venture_count == 0:
+        vn_status = "Not Found"
+        print("No venture name has been mapped in this file")
+    elif venture_count > 1:
+        vn_status = "Multi-Venture"
+        print("There are reports from multiple ventures in this file")
+    else:
+        vn_status = "Single-Venture"
+        print("This file is solely for " + QR_venture_name)
+
+    return [prefix,suffix,vn_status]
 
 
 def exception_ventures():
     print("Venture Exception handling not implemented yet, exiting now...")
+
+
+def rename_file(file: str,newfilepath: str,prefix: str,suffix:str):
+
+    newfile = os.path.join(newfilepath,prefix+suffix).replace("\\","/")
+    shutil.move(file, newfile)

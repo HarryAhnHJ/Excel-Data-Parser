@@ -18,7 +18,7 @@ def add_to_fee_db(df:pd.DataFrame, isqtr:int):
         vars.nq_db = pd.concat(list)
 
 
-def recordfee(venture:str | None, file:str, ws:str, qtr:str, year:str):
+def recordfee(venture:str, file:str, ws:str, qtr:str, year:str):
     '''
     record the QR venture name and its corresponding AM and Promote Fee on pandas dataframe
     write the dataframe onto Excel sheet, save in Partner Fees folder

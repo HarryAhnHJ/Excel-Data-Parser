@@ -27,7 +27,6 @@ def browseFiles():
     
     year = getYear()
     qtr = getQuarter()
-    print("Date set as Q" + qtr + ", " + year)
 
     files = os.listdir(source_dir)
     print(files)
@@ -39,14 +38,18 @@ def browseFiles():
 
     for file in files:
         file = source_dir + "/" + file
-        print("Currently working on: " + file)
+        print("            Currently working on: " + file)
 
         if file.endswith(('.xlsx','.csv','xlsm','xls')) and not os.path.isdir(file):
-            if transform.transformFile(file,qtr,year) != "": #should only print non-empty string if name needs to be adjusted
+            transform_fix = transform.transformFile(file,qtr,year) 
+            if transform_fix != []: #should only return non-empty list if ther needs to be venture name fix
+                newfilepath = transform_fix[0]
+                prefix = transform_fix[1]
+                suffix = transform_fix[2]
                 print("venture name error:")
-                name_error()
+                name_error(prefix)
         else:
-            print("This is either a folder or not an Excel file. Skipping to next file...")
+            print("File done")
         cnt_files += 1 
 
     print("Renamed and moved all files. Exporting master fee dataframe...")
@@ -60,7 +63,7 @@ def browseFiles():
     exit()
     
 
-def name_error():#!!!
+def name_error(prefix: str):#!!!
     '''
     error ui when it cannot determine name of venture from fee tab
     '''
@@ -68,8 +71,38 @@ def name_error():#!!!
     errorWindow.title("Unknown Venture Name")
     errorWindow.geometry("300x300")
 
+    sub_frm = ttk.Frame(errorWindow, padding=10)
+
+    new_venture_name = StringVar()
+    
+    init_label    = ttk.Label(
+    sub_frm,
+    text="Please correct the following venture name found in the Partner's report:",
+    anchor="center").grid(columnspan=4, row=1)
+
+    name_label    = ttk.Label(
+    sub_frm,
+    text=prefix).grid(column=1,row=2)
+
+    input_qtr_text = ttk.Label(
+    sub_frm,
+    text = "Enter Correct QR Venture Name:"
+    ).grid(column=1,row=3)
+
+    input_qtr = ttk.Entry(
+    sub_frm,
+    textvariable=new_venture_name
+    ).grid(column=2,row=3)
+
+    input_confirm = ttk.Button(
+    sub_frm,
+    text="Submit",
+    command=getnewname(new_venture_name)).grid(column=3,row=3)
+
     return
 
+def getnewname(name: str):
+    newname = new_venture_name.get()
 
 def getQuarter()->str:
     '''
@@ -82,7 +115,7 @@ def getQuarter()->str:
             print("Error: Invalid Quarter Input")
     except:
         print("Pleae input a valid number for Quarter")
-
+    print("Date set as Q" + qtr)
     return qtr
     
     

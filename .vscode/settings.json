@@ -1,14 +1,6 @@
-<<<<<<< HEAD
 {
     "python.analysis.typeCheckingMode": "basic",
-    "python.defaultInterpreterPath": "C:\Users\harry.ahn\QR Code\AM-Fee-Automation\.env\Scripts\python.exe",
-    "python.terminal.activateEnvironment": true,
-    "jupyter.interactiveWindow.textEditor.executeSelection": true,
-}
-=======
-{
-    "python.analysis.typeCheckingMode": "basic",
-    "python.defaultInterpreterPath": "C:\Users\harry.ahn\QuadReal_Stuff\Projects\Code\QuadReal\.env\Scripts\python.exe",
+    "python.defaultInterpreterPath": "E:\Coding\Excel-Data-Parser\.env\Scripts\python.exe",
     "python.terminal.activateEnvironment": true,
 }
->>>>>>> 834713ec91c76696308445c2e0b3648f77f4543d
+
