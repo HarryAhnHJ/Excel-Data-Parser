@@ -42,12 +42,15 @@ def browseFiles():
 
         if file.endswith(('.xlsx','.csv','xlsm','xls')) and not os.path.isdir(file):
             transform_fix = transform.transformFile(file,qtr,year) 
-            if transform_fix != []: #should only return non-empty list if ther needs to be venture name fix
+            if transform_fix != []: #should only return non-empty list if there needs to be venture name fix
                 newfilepath = transform_fix[0]
                 prefix = transform_fix[1]
                 suffix = transform_fix[2]
                 print("venture name error:")
-                name_error(prefix)
+
+                prefix = name_error(file,prefix)
+                transform.rename_file(file,newfilepath,prefix,suffix)
+
         else:
             print("File done")
         cnt_files += 1 
@@ -63,9 +66,10 @@ def browseFiles():
     exit()
     
 
-def name_error(prefix: str):#!!!
+def name_error(file: str,prefix: str)->str:#!!!
     '''
     error ui when it cannot determine name of venture from fee tab
+        - shows the filename & the venture name by partner that couldn't be mapped to QR venture name
     '''
     errorWindow = Toplevel(root)
     errorWindow.title("Unknown Venture Name")
@@ -73,11 +77,12 @@ def name_error(prefix: str):#!!!
 
     sub_frm = ttk.Frame(errorWindow, padding=10)
 
-    new_venture_name = StringVar()
-    
+    new_venture_name_temp = StringVar()
+    newname = "NoName"
+
     init_label    = ttk.Label(
     sub_frm,
-    text="Please correct the following venture name found in the Partner's report:",
+    text=f"Please correct the following venture name found in the Partner's report:\n{file}",
     anchor="center").grid(columnspan=4, row=1)
 
     name_label    = ttk.Label(
@@ -91,18 +96,25 @@ def name_error(prefix: str):#!!!
 
     input_qtr = ttk.Entry(
     sub_frm,
-    textvariable=new_venture_name
+    textvariable=new_venture_name_temp
     ).grid(column=2,row=3)
 
     input_confirm = ttk.Button(
     sub_frm,
     text="Submit",
-    command=getnewname(new_venture_name)).grid(column=3,row=3)
+    command= lambda: assign_venturename(new_venture_name_temp)).grid(column=3,row=3)
 
-    return
+    print(f'New venture name is: {newname}. Replacing with old name')
 
-def getnewname(name: str):
-    newname = new_venture_name.get()
+    def assign_venturename(ttkentry:StringVar):
+        nonlocal newname
+        newname = ttkentry.get()
+
+    return newname
+
+
+
+
 
 def getQuarter()->str:
     '''

@@ -55,7 +55,7 @@ def getnewfilepath(file: str,qtr: str,year: str)->str:
     #     str(pathlib.Path.home()) + "/OneDrive - Quadreal Property Group" + vars.test_path
     # ) #work test path
 
-    target_dir = vars.home_test_path #home test path
+    target_dir = vars.test_path #home test path
 
     newFolderName = year + " Q" + qtr
     # print("quarter is " + qtr)
