@@ -49,10 +49,10 @@ def browseFiles():
                 print("venture name error:")
 
                 prefix = name_error(file,prefix)
+                print("name error function complete. Renaming file for last time?")
                 transform.rename_file(file,newfilepath,prefix,suffix)
 
-        else:
-            print("File done")
+        print("             File done")
         cnt_files += 1 
 
     print("Renamed and moved all files. Exporting master fee dataframe...")
@@ -63,6 +63,7 @@ def browseFiles():
     else:
         print("Error: Not all files have been parsed. Check output and try again.")
 
+    os.startfile(vars.excel)
     exit()
     
 
@@ -71,18 +72,21 @@ def name_error(file: str,prefix: str)->str:#!!!
     error ui when it cannot determine name of venture from fee tab
         - shows the filename & the venture name by partner that couldn't be mapped to QR venture name
     '''
+    newname = "NoName"
+
     errorWindow = Toplevel(root)
     errorWindow.title("Unknown Venture Name")
-    errorWindow.geometry("300x300")
+    errorWindow.geometry("1000x300")
 
     sub_frm = ttk.Frame(errorWindow, padding=10)
+    sub_frm.grid()
 
     new_venture_name_temp = StringVar()
-    newname = "NoName"
+    
 
     init_label    = ttk.Label(
     sub_frm,
-    text=f"Please correct the following venture name found in the Partner's report:\n{file}",
+    text=f"Please correct the following venture name found in the Partner's report:\n{os.path.basename(file)}",
     anchor="center").grid(columnspan=4, row=1)
 
     name_label    = ttk.Label(
@@ -91,7 +95,7 @@ def name_error(file: str,prefix: str)->str:#!!!
 
     input_qtr_text = ttk.Label(
     sub_frm,
-    text = "Enter Correct QR Venture Name:"
+    text = "Enter the correct QR Venture Name:"
     ).grid(column=1,row=3)
 
     input_qtr = ttk.Entry(
@@ -99,21 +103,25 @@ def name_error(file: str,prefix: str)->str:#!!!
     textvariable=new_venture_name_temp
     ).grid(column=2,row=3)
 
+    def assign_venturename():
+        print("in assign venture function")
+        nonlocal newname
+        newname = str(new_venture_name_temp.get())
+        print(f'New venture name is: {newname}. Replacing with old name')
+        errorWindow.quit()
+
     input_confirm = ttk.Button(
     sub_frm,
     text="Submit",
-    command= lambda: assign_venturename(new_venture_name_temp)).grid(column=3,row=3)
+    command= assign_venturename).grid(column=3,row=3)
 
-    print(f'New venture name is: {newname}. Replacing with old name')
-
-    def assign_venturename(ttkentry:StringVar):
-        nonlocal newname
-        newname = ttkentry.get()
-
+    errorWindow.mainloop()
+    
     return newname
 
-
-
+# def assign_venturename():
+#     print("a")
+#     return
 
 
 def getQuarter()->str:
@@ -127,7 +135,7 @@ def getQuarter()->str:
             print("Error: Invalid Quarter Input")
     except:
         print("Pleae input a valid number for Quarter")
-    print("Date set as Q" + qtr)
+    print("Date set as Q " + qtr)
     return qtr
     
     

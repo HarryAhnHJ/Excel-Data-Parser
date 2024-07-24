@@ -7,8 +7,6 @@ import fee
 import pandas as pd
 import traceback
 import sys, os
-
-
 #print(traceback.format_exc())
 
 def transformFile(file: str,qtr: str,year: str)->list[str]:
@@ -28,21 +26,34 @@ def transformFile(file: str,qtr: str,year: str)->list[str]:
     status = file_info[2] #Not Found, Mult-Venture,Single-Venture
 
     newfilepath = getnewfilepath(file,qtr,year)
-
+    
     if status == "Not Found":
+        suffix += ".xlsx"
+        print("in Not Found")
         return [newfilepath,prefix,suffix]
     
     if status == "Single-Venture":
+        suffix += ".xlsx"
+        print("in single venture")
         rename_file(file,newfilepath,prefix,suffix)
         return []
 
     elif status == "Multi-Venture":
-        rename_file(file,newfilepath,prefix,suffix+" - Mutli-Venture")
+        suffix += " - Multi-Venture.xlsx"
+        print("in multi venture")
+        rename_file(file,newfilepath,prefix,suffix)
         return []
 
     else:
         print("Status Error. Check getnewfilename function.")
         return []
+    
+
+def rename_file(file: str,newfilepath: str,prefix: str,suffix:str):
+
+    newfile = os.path.join(newfilepath,prefix+suffix).replace("\\","/")
+    shutil.move(file, newfile)
+
  
 def getnewfilepath(file: str,qtr: str,year: str)->str:
     '''
@@ -51,11 +62,11 @@ def getnewfilepath(file: str,qtr: str,year: str)->str:
     # target_dir = (
     #     str(pathlib.Path.home()) + "/OneDrive - Quadreal Property Group" + od_path
     # ) #real path
-    # target_dir = (
-    #     str(pathlib.Path.home()) + "/OneDrive - Quadreal Property Group" + vars.test_path
-    # ) #work test path
+    target_dir = (
+        str(pathlib.Path.home()) + "/OneDrive - Quadreal Property Group" + vars.test_path
+    ) #work test path
 
-    target_dir = vars.test_path #home test path
+    # target_dir = vars.home_test_path #home test path
 
     newFolderName = year + " Q" + qtr
     # print("quarter is " + qtr)
@@ -79,6 +90,7 @@ def getnewfilename(file: str,qtr: str,year: str)->list[str]:
     try:
         wb = xl.load_workbook(filename = file,data_only=True)   
     except:
+        print(traceback.format_exc())
         print("Probably not an excel file. Ignoring this file...")
         return []
 
@@ -96,6 +108,7 @@ def getnewfilename(file: str,qtr: str,year: str)->list[str]:
         deployment_sheet = False
         if ws.sheet_state == "visible":
             venture_name = ""
+
             if str(ws.cell(row=4,column=1).value) == "INVESTMENT NAME:":
                 # print("capital deployment sheet is visible!!")
                 if str(ws.cell(row=4,column=2).value) != "":
@@ -109,7 +122,7 @@ def getnewfilename(file: str,qtr: str,year: str)->list[str]:
                 am_ws = ws.title
 
         qr_name_temp = ""
-        if not deployment_sheet and not am_ws == "":
+        if (not deployment_sheet) and (am_ws == ""):
             print("   Not one of the expected reports. Trying next worksheet..")
             continue
         else:
@@ -136,11 +149,11 @@ def getnewfilename(file: str,qtr: str,year: str)->list[str]:
     '''
     suffix = " - Q" + str(qtr)
     if deployment & am_fee:
-        suffix += " QRI Capital Deployment Forecast and AM Fee.xlsx"
+        suffix += " QRI Capital Deployment Forecast and AM Fee"
     elif deployment:
-        suffix += " QRI Capital Deployment Forecast.xlsx"
+        suffix += " QRI Capital Deployment Forecast"
     elif am_fee:
-        suffix += " QRI AM Fee.xlsx"
+        suffix += " QRI AM Fee"
     else:
         suffix += ""
 
@@ -163,7 +176,3 @@ def exception_ventures():
     print("Venture Exception handling not implemented yet, exiting now...")
 
 
-def rename_file(file: str,newfilepath: str,prefix: str,suffix:str):
-
-    newfile = os.path.join(newfilepath,prefix+suffix).replace("\\","/")
-    shutil.move(file, newfile)
