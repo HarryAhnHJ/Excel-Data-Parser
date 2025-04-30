@@ -1,1 +1,5 @@
-figure out name fix UI stuff
+
+
+fix focus_listbox
+
+correcting the name in the UI fixes the name of the file, but does NOT record the fee in the fee output excel file

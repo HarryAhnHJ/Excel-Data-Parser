@@ -11,7 +11,7 @@ import sys, os
 
 def transformFile(file: str,qtr: str,year: str)->list[str]:
     '''
-    Fucntion for individual excel files in the folder. 
+    Fucntion for each file (excel) in the folder. 
     Get new file path & file name
     Replace new path & name with existing path & name
     '''
@@ -81,7 +81,7 @@ def getnewfilepath(file: str,qtr: str,year: str)->str:
 
 def getnewfilename(file: str,qtr: str,year: str)->list[str]:
     '''
-    Get venture name and type of report (AM Fee or Deployment forecast or both) 
+    Get venture name and type of report (AM Fee or Deployment forecast or both or none) 
         - If neither report exists, return empty
         - If only AM Fee and venture name exists, record fee and create new file name
         - If only Deployment Forecast and venture name exists, create new file name
@@ -133,7 +133,7 @@ def getnewfilename(file: str,qtr: str,year: str)->list[str]:
                 venture_count += 1
                 if am_ws != "":
                     try:
-                        fee.recordfee(QR_venture_name,file,am_ws,qtr,year)
+                        fee.recordfee(QR_venture_name,file,am_ws,qtr,year)  ### go into pulling the actual fee (fee.py)!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                     except Exception as e:
                         print(traceback.format_exc())
                         print(e)
