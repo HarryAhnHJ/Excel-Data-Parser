@@ -164,3 +164,4 @@ vars.py
 requirements.txt
 e_mail.py
 .vscode
+.env

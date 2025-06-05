@@ -41,18 +41,37 @@ def browseFiles():
         file = source_dir + "/" + file
         print("            Currently working on: " + file)
 
+        '''
+        If file is a valid excel file, then transform (rename file & path) file, if applicable
+        '''
         if file.endswith(('.xlsx','.csv','.xlsm','.xls')) and not os.path.isdir(file):
-            transform_fix = transform.transformFile(file,qtr,year) 
-            if transform_fix != []: #should only return non-empty list if there needs to be venture name fix
-                newfilepath = transform_fix[0]
-                prefix = transform_fix[1] #this is the 
-                suffix = transform_fix[2]
-                print("venture name error:")
 
-                prefix = name_error(file,prefix)
-                print("name error function complete. Renaming file for last time?")
-                print(f'{newfilepath}/{prefix}/{suffix}')
-                transform.rename_file(file,newfilepath,prefix,suffix)
+            # name_found = Bool (True if venture name was mapped, False if not)
+            # filename = venture name (Correct venture name + suffix + status is name_found is True, raw partner venture name if name_found is False), empty if excel name is empty
+            # also records fee
+            [name_found,filename] = transform.change_filename(file,"",qtr,year) 
+
+            if name_found == False:
+                if filename == "":
+                    print("No venture name found in file. Skipping file...")
+                    continue
+                else:
+                    manual_venture_name = name_error(filename,file)
+                    [fee_found,filename] = transform.change_filename(file,manual_venture_name,qtr,year)
+                    continue
+
+            filepath = transform.change_filepath(file,qtr,year)
+
+            # if transform_fix != []: #should only return non-empty list if there needs to be venture name fix
+            #     newfilepath = transform_fix[0]
+            #     prefix = transform_fix[1] #this is the 
+            #     suffix = transform_fix[2]
+            #     print("venture name error:")
+
+            #     prefix = name_error(file,prefix)
+            #     print("name error function complete. Renaming file for last time?")
+            #     print(f'{newfilepath}/{prefix}/{suffix}')
+            #     transform.rename_file(file,newfilepath,prefix,suffix)
 
         print("             File done")
         cnt_files += 1 

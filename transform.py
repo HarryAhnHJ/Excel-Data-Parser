@@ -11,7 +11,6 @@ import sys, os
 
 def transformFile(file: str,qtr: str,year: str)->list[str]:
     '''
-    Fucntion for each file (excel) in the folder. 
     Get new file path & file name
     Replace new path & name with existing path & name
     '''
@@ -79,7 +78,7 @@ def getnewfilepath(file: str,qtr: str,year: str)->str:
     return path
 
 
-def getnewfilename(file: str,qtr: str,year: str)->list[str]:
+def change_filename(file: str, qr_name: str, qtr: str,year: str):
     '''
     Get venture name and type of report (AM Fee or Deployment forecast or both or none) 
         - If neither report exists, return empty
@@ -87,6 +86,7 @@ def getnewfilename(file: str,qtr: str,year: str)->list[str]:
         - If only Deployment Forecast and venture name exists, create new file name
         - If either/both exist but no name or wrong name, flag error and provide new name in UI
     '''
+        
     try:
         wb = xl.load_workbook(filename = file,data_only=True)   
     except:
@@ -94,30 +94,29 @@ def getnewfilename(file: str,qtr: str,year: str)->list[str]:
         print("Probably not an excel file. Ignoring this file...")
         return []
 
-    
     deployment = False # this means deployment sheet exists, but not necesarily the correct venture name
     am_fee = False # this means AM fee sheet exists, but not necessarily with the correct venture name
-    QR_venture_name = ""
-    venture_count = 0
+    partner_venture_name = "" # this is the venture name that the partner uses
+    QR_venture_name = "" # this is the venture name that is in vars.venture_names
+    venture_count = 0 # number of ventures with proper name in the file
 
     '''
     Checks each worksheet to see if capital deployment sheet or AM fee sheet exist
     '''
-    for ws in wb:
+    for ws in wb: #for each worksheet in workbook:
         am_ws = ""
         deployment_sheet = False
         if ws.sheet_state == "visible":
-            venture_name = ""
 
             if str(ws.cell(row=4,column=1).value) == "INVESTMENT NAME:":
                 # print("capital deployment sheet is visible!!")
                 if str(ws.cell(row=4,column=2).value) != "":
-                    venture_name = str(ws.cell(row=4,column=2).value).strip()
+                    partner_venture_name = str(ws.cell(row=4,column=2).value).strip()
                 deployment = True
                 deployment_sheet = True
             elif str(ws.cell(row=6,column=1).value) == "INVESTMENT NAME:":
                 if str(ws.cell(row=6,column=2).value) != "":
-                    venture_name = str(ws.cell(row=6,column=2).value).strip()
+                    partner_venture_name = str(ws.cell(row=6,column=2).value).strip()
                 am_fee = True
                 am_ws = ws.title
 
@@ -126,27 +125,33 @@ def getnewfilename(file: str,qtr: str,year: str)->list[str]:
             print("   Not one of the expected reports. Trying next worksheet..")
             continue
         else:
-            qr_name_temp = vars.venture_names.get(venture_name.lower())
+            qr_name_temp = vars.venture_names.get(partner_venture_name.lower())
             if qr_name_temp is not None:
                 QR_venture_name = str(qr_name_temp).strip()
-                print(f'{venture_name} has been converted to {QR_venture_name}')
+                print(f'{partner_venture_name} has been converted to {QR_venture_name}')
                 venture_count += 1
                 if am_ws != "":
                     try:
-                        fee.recordfee(QR_venture_name,file,am_ws,qtr,year)  ### go into pulling the actual fee (fee.py)!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                        if qr_name != "":
+                            QR_venture_name = qr_name
+                        fee.recordfee(QR_venture_name,file,am_ws,qtr,year)  ### pulling the actual fee
                     except Exception as e:
                         print(traceback.format_exc())
                         print(e)
-            else:
-                QR_venture_name = venture_name
-                print("Venture name not found. Wrong name or cell is empty")
+            else: 
+                print("Venture name not found. Wrong name or cell is empty. Trying next worksheet..")
 
     print("No more worksheets to look through")
+
+    if QR_venture_name == "":
+        print("Partner venture name could not be mapped to a QR Venture Name.")
+        # If no venture name is found, return empty list
+        # This will be handled by the UI to flag an error
+        return [False, partner_venture_name]
     
-    '''
-    If no relevant worksheet is found, leave the file alone & flag
-    If worksheet is found, get the name of the venture using the cell found above
-    '''
+    #if venture name is found, below code will change the file name fully
+    prefix = QR_venture_name 
+
     suffix = " - Q" + str(qtr)
     if deployment & am_fee:
         suffix += " QRI Capital Deployment Forecast and AM Fee"
@@ -156,8 +161,6 @@ def getnewfilename(file: str,qtr: str,year: str)->list[str]:
         suffix += " QRI AM Fee"
     else:
         suffix += ""
-
-    prefix = QR_venture_name
 
     if venture_count == 0:
         vn_status = "Not Found"
@@ -169,7 +172,7 @@ def getnewfilename(file: str,qtr: str,year: str)->list[str]:
         vn_status = "Single-Venture"
         print("This file is solely for " + QR_venture_name)
 
-    return [prefix,suffix,vn_status]
+    return [True, prefix+suffix+"-"+vn_status]
 
 
 def exception_ventures():
