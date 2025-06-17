@@ -26,26 +26,26 @@ def transformFile(file: str,qtr: str,year: str)->list[str]:
 
     newfilepath = getnewfilepath(file,qtr,year)
     
-    if status == "Not Found":
-        suffix += ".xlsx"
-        print("in Not Found")
-        return [newfilepath,prefix,suffix]
+    # if status == "Not Found":
+    #     suffix += ".xlsx"
+    #     print("in Not Found")
+    #     return [newfilepath,prefix,suffix]
     
-    if status == "Single-Venture":
-        suffix += ".xlsx"
-        print("in single venture")
-        rename_file(file,newfilepath,prefix,suffix)
-        return []
+    # if status == "Single-Venture":
+    #     suffix += ".xlsx"
+    #     print("in single venture")
+    #     rename_file(file,newfilepath,prefix,suffix)
+    #     return []
 
-    elif status == "Multi-Venture":
-        suffix += " - Multi-Venture.xlsx"
-        print("in multi venture")
-        rename_file(file,newfilepath,prefix,suffix)
-        return []
+    # elif status == "Multi-Venture":
+    #     suffix += " - Multi-Venture.xlsx"
+    #     print("in multi venture")
+    #     rename_file(file,newfilepath,prefix,suffix)
+    #     return []
 
-    else:
-        print("Status Error. Check getnewfilename function.")
-        return []
+    # else:
+    #     print("Status Error. Check getnewfilename function.")
+    #     return []
     
 
 def rename_file(file: str,newfilepath: str,prefix: str,suffix:str):
@@ -54,7 +54,7 @@ def rename_file(file: str,newfilepath: str,prefix: str,suffix:str):
     shutil.move(file, newfile)
 
  
-def getnewfilepath(file: str,qtr: str,year: str)->str:
+def change_filepath(file: str,qtr: str,year: str)->str:
     '''
     get file path of new destination
     '''

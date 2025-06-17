@@ -57,8 +57,11 @@ def browseFiles():
                     continue
                 else:
                     manual_venture_name = name_error(filename,file)
-                    [fee_found,filename] = transform.change_filename(file,manual_venture_name,qtr,year)
-                    continue
+                    [name_found,filename] = transform.change_filename(file,manual_venture_name,qtr,year) #filename should return manual venture name, and name_found should be True
+
+            if name_found == False and filename != manual_venture_name:
+                print("Venture name not found in file. Skipping file...")
+                
 
             filepath = transform.change_filepath(file,qtr,year)
 
